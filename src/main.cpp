@@ -1,6 +1,5 @@
-#include "integer_mod_ring.h"
+#include "integer_ring.h"
 #include <print>
-
 
 
 
