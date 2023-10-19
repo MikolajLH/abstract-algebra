@@ -18,15 +18,17 @@ namespace algebra
 		public:
 			Zn() = delete;
 		
-			constexpr Zn(std::unsigned_integral auto val) noexcept : m_val{ size_t(val) % N } 
+			constexpr Zn(std::unsigned_integral auto val) noexcept 
+				: m_val{ size_t(val) % N } 
 			{}
 
-			constexpr Zn(std::signed_integral auto val) noexcept : m_val{ size_t(val < 0 ? -val : val) % N } 
+			constexpr Zn(std::signed_integral auto val) noexcept 
+				: m_val{ size_t(val < 0 ? -val : val) % N } 
 			{}
 
-			constexpr auto operator <=>(const Zn<N>&) const noexcept = default;
+			inline constexpr auto operator <=>(const Zn<N>&) const noexcept = default;
 
-			constexpr auto operator +(this const auto& self, const Zn<N>& other) noexcept
+			inline constexpr auto operator +(this const auto& self, const Zn<N>& other) noexcept
 			{
 				if constexpr (N - 1 > std::numeric_limits<size_t>::max() / 2)
 				{
@@ -44,8 +46,14 @@ namespace algebra
 
 			inline constexpr auto operator *(this const auto& self, const Zn<N>& other) noexcept
 			{
+				static_assert(N - 1 <= prime::int_sqrt_heron(std::numeric_limits<size_t>::max()), "Possible overflow");
+
 				return Zn<N>(self.m_val * other.m_val);
 			}
+
+			inline constexpr void operator++(this auto& self) noexcept { self = self + 1; }
+
+			inline constexpr void operator--(this auto& self) noexcept { self = self - 1; }
 
 			inline constexpr auto operator -(this const auto& self) noexcept
 			{
@@ -54,7 +62,7 @@ namespace algebra
 
 			inline constexpr auto operator -(this const auto& self, const Zn<N>& other) noexcept
 			{
-				return Zn<N>(self.m_val + N - other.m_val);
+				return self + (-other);
 			}
 			
 			constexpr auto inverse(this const auto& self)noexcept requires prime::IsPrime<N>
@@ -164,42 +172,29 @@ struct std::formatter<algebra::Zn<N>> {
 };
 
 
-/*
-	template<class T>
-	constexpr void in_order(T& a, T& b)
+//https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
+//returns (gcd(a,b), s, t) such that a * s + b * t = gcd(a,b)
+template<class Int>
+[[nodiscard("pure function")]] constexpr auto extended_euclidean_algorithm(Int a, Int b)
+{
+	static_assert(not std::unsigned_integral<Int>, "since this function uses substraction, using unsigned integral types can couse underflow");
+
+	Int r0 = std::max(a, b);
+	Int r1 = std::min(a, b);
+
+	Int s0 = 1;
+	Int s1 = 0;
+
+	Int t0 = 0;
+	Int t1 = 1;
+
+	while (r1 != 0)
 	{
-		if(a > b) { std::swap(a, b); }
+		const Int qi = r0 / r1;
+		r0 = std::exchange(r1, r0 - qi * r1);
+		s0 = std::exchange(s1, s0 - qi * s1);
+		t0 = std::exchange(t1, t0 - qi * t1);
 	}
 
-	constexpr size_t gcd(size_t a, size_t b)
-	{
-		in_order(a, b);
-		if (b == 0)return a;
-		else
-		{
-			a = std::exchange(b, a % b);
-			return gcd(a, b);
-		}
-	}
-
-	using ssize_t = std::ptrdiff_t;
-	ssize_t extended_euclidean_algorithm(ssize_t a, ssize_t b)
-	{
-		ssize_t r0 = a;
-		ssize_t r1 = b;
-		ssize_t s0 = 1;
-		ssize_t s1 = 0;
-		ssize_t t0 = 0;
-		ssize_t t1 = 1;
-
-		while (r1 != 0)
-		{
-			const ssize_t qi = r0 / r1;
-			r0 = std::exchange(r1, r0 % r1);
-			s0 = std::exchange(s1, s0 - qi * s1);
-			t0 = std::exchange(t1, t0 - qi * t1);
-		}
-
-		return s0;
-	}
-	*/
+	return std::make_tuple(r0, s0, t0);
+}
