@@ -1,12 +1,11 @@
-#include "integer_mod_ring.h"
-#include <print>
-
-
+#include "integer_ring.h"
 
 
 int main()
 {
+	using algebra::Zn;
 
 
+	
 	return 0;
 }
