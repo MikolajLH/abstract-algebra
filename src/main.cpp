@@ -1,5 +1,10 @@
 #include "integer_ring.h"
+<<<<<<< HEAD
+=======
+#include <print>
 
+
+>>>>>>> dev
 
 int main()
 {

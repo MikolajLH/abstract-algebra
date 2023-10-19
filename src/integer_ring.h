@@ -83,6 +83,15 @@ namespace algebra
 				return s0;
 			}
 			
+			constexpr auto pow(this const auto& self, size_t power) noexcept
+			{
+				if (power == 0)return Zn<N>(1);
+				auto result = self;
+				for (size_t i = 0; i < power; ++i)
+					result = result * self;
+				return result;
+			}
+
 			constexpr auto operator /(this const auto& self, const Zn<N>& other) requires prime::IsPrime<N>
 			{
 				static_assert(other.integer() != 0, "Cannot divide by zero!");
